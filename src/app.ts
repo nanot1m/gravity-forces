@@ -134,7 +134,7 @@ const solarSystem: SpaceObject[] = [
 		radius: 1,
 		color: "gray",
 	},
-	
+
 	// Mars
 	{
 		body: new SBody(
@@ -260,14 +260,18 @@ export function setupCanvas(element: HTMLCanvasElement) {
 	element.addEventListener("touchstart", (event) => {
 		if (event.touches.length === 2) {
 			const [a, b] = Array.from(event.touches)
-			lastDistance = a.clientX - b.clientX
+			lastDistance = new Vec2(a.clientX, a.clientY)
+				.sub(new Vec2(b.clientX, b.clientY))
+				.mag()
 		}
 	})
 	element.addEventListener("touchmove", (event) => {
 		if (event.touches.length === 2) {
 			const [a, b] = Array.from(event.touches)
-			const distance = a.clientX - b.clientX
-			scale *= 1 + (distance - lastDistance) / 1000
+			const distance = new Vec2(a.clientX, a.clientY)
+				.sub(new Vec2(b.clientX, b.clientY))
+				.mag()
+			scale *= 1 + (distance - lastDistance) / 100
 			lastDistance = distance
 		}
 	})
