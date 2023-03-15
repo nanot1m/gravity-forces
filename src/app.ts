@@ -134,6 +134,7 @@ const solarSystem: SpaceObject[] = [
 		radius: 1,
 		color: "gray",
 	},
+	
 	// Mars
 	{
 		body: new SBody(
@@ -144,6 +145,28 @@ const solarSystem: SpaceObject[] = [
 		radius: 3,
 		color: "red",
 	},
+	// Mars moons
+	// Phobos
+	{
+		body: new SBody(
+			new Vec2(2.279 * 10 ** 11 + 9.378 * 10 ** 7, 0),
+			new Vec2(0, 24130 + 700),
+			1.0659 * 10 ** 16,
+		),
+		radius: 1,
+		color: "gray",
+	},
+	// Deimos
+	{
+		body: new SBody(
+			new Vec2(2.279 * 10 ** 11 + 2.326 * 10 ** 8, 0),
+			new Vec2(0, 24130 + 400),
+			1.4762 * 10 ** 15,
+		),
+		radius: 1,
+		color: "gray",
+	},
+
 	// Jupiter
 	{
 		body: new SBody(
@@ -213,10 +236,13 @@ export function setupCanvas(element: HTMLCanvasElement) {
 
 	let centeredObject = solarSystem[0].body
 
+	let stepTime = 10
+	let stepsPerFrame = 360
 	function loop() {
 		screenCenter = centeredObject.pos
-		sim.step(60 * 60)
-		// spacegray color
+
+		for (let i = 0; i < stepsPerFrame; i++) sim.step(stepTime)
+
 		clearCanvas(ctx, "#1b2b34")
 		drawObjects(ctx, solarSystem)
 		requestAnimationFrame(loop)
