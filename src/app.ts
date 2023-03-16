@@ -1,22 +1,12 @@
-import { GUI } from "dat.gui"
+import * as dat from "dat.gui"
 
-import { SBody } from "./classes/SBody"
 import { Simulator } from "./classes/Simulator"
 import { Vec2 } from "./classes/Vec2"
+import { solarSystemJson } from "./data/solar-system"
+import { Circle, SpaceObject, Style } from "./types"
+import { scaleAndResizeCanvas, spaceObjectJsonToSpaceObject } from "./utils"
 
-function scaleAndResizeCanvas(
-	canvas: HTMLCanvasElement,
-	scaleFn: (scale: number) => void,
-	width: number,
-	height: number,
-) {
-	const scale = window.devicePixelRatio
-	canvas.width = width * scale
-	canvas.height = height * scale
-	canvas.style.width = `${width}px`
-	canvas.style.height = `${height}px`
-	scaleFn(scale)
-}
+const G = 6.6743 * 10 ** -11 // N * m^2 / kg^2
 
 let screenWidth = window.innerWidth
 let screenHeight = window.innerHeight
@@ -25,10 +15,48 @@ let screenCenter = new Vec2(0, 0)
 let stepTime = 2 // seconds
 let stepsPerFrame = 1800 // 30 minutes
 let followPlanetIdx = 0
-let gui: GUI
+let gui: dat.GUI
+let selectedPlanet: dat.GUI
+
+export function setupCanvas(element: HTMLCanvasElement) {
+	const ctx = element.getContext("2d")!
+	scaleAndResizeCanvas(
+		element,
+		(scale) => ctx.scale(scale, scale),
+		screenWidth,
+		screenHeight,
+	)
+
+	const solarSystemObjects = spaceObjectJsonToSpaceObject(solarSystemJson)
+
+	const sim = new Simulator(
+		solarSystemObjects.map((spaceObject) => spaceObject.body),
+		G,
+	)
+
+	let passedTime = 0
+
+	function loop() {
+		for (let i = 0; i < stepsPerFrame; i++) sim.step(stepTime)
+
+		passedTime += stepTime * stepsPerFrame
+		screenCenter = solarSystemObjects[followPlanetIdx].body.pos
+
+		clearCanvas(ctx, "#1b2b34")
+		drawObjects(ctx, solarSystemObjects)
+		printPassedTime(ctx, passedTime)
+		printScale(ctx)
+
+		requestAnimationFrame(loop)
+	}
+
+	loop()
+	attachListeners(ctx, solarSystemObjects)
+	initGui(solarSystemObjects)
+}
 
 function initGui(objects: SpaceObject[]) {
-	gui = new GUI({
+	gui = new dat.GUI({
 		autoPlace: true,
 		hideable: true,
 	})
@@ -56,9 +84,9 @@ function initGui(objects: SpaceObject[]) {
 				objects.findIndex((obj) => obj.title === value),
 				0,
 			)
+			selectPlanet(objects)
 		},
 	}
-
 	const simFolder = gui.addFolder("Simulation")
 	simFolder.add(sim, "stepTime", 1, 10, 1)
 	simFolder.add(sim, "stepsPerFrame", 60, 7200, 60)
@@ -70,15 +98,14 @@ function initGui(objects: SpaceObject[]) {
 	simFolder.open()
 }
 
-type Circle = {
-	pos: Vec2
-	radius: number
-}
-
-type Style = {
-	fillStyle?: string
-	strokeStyle?: string
-	lineWidth?: number
+function selectPlanet(objects: SpaceObject[]) {
+	if (selectedPlanet) {
+		gui.removeFolder(selectedPlanet)
+	}
+	selectedPlanet = gui.addFolder("Selected Planet")
+	selectedPlanet.add(objects[followPlanetIdx], "title")
+	selectedPlanet.add(objects[followPlanetIdx].body, "mass")
+	selectedPlanet.open()
 }
 
 function drawCircle(
@@ -110,13 +137,6 @@ function drawCircle(
 	ctx.restore()
 }
 
-type SpaceObject = {
-	title?: string
-	body: SBody
-	radius: number
-	color: string
-}
-
 function clearCanvas(ctx: CanvasRenderingContext2D, backgroundColor: string) {
 	ctx.save()
 	ctx.fillStyle = backgroundColor
@@ -141,196 +161,36 @@ function drawObjects(ctx: CanvasRenderingContext2D, objects: SpaceObject[]) {
 	}
 }
 
-const solarSystem: SpaceObject[] = [
-	{
-		title: "Sun",
-		body: new SBody(new Vec2(0, 0), new Vec2(0, 0), 1.989 * 10 ** 30),
-		radius: 20,
-		color: "yellow",
-	},
-	{
-		title: "Mercury",
-		body: new SBody(
-			new Vec2(5.79 * 10 ** 10, 0),
-			new Vec2(0, 47870),
-			3.285 * 10 ** 23,
-		),
-		radius: 2,
-		color: "gray",
-	},
-	{
-		title: "Venus",
-		body: new SBody(
-			new Vec2(1.082 * 10 ** 11, 0),
-			new Vec2(0, 35020),
-			4.867 * 10 ** 24,
-		),
-		radius: 3,
-		color: "orange",
-	},
-	{
-		title: "Earth",
-		body: new SBody(
-			new Vec2(1.496 * 10 ** 11, 0), // m
-			new Vec2(0, 29783), // m/s
-			5.972 * 10 ** 24, // kg
-		),
-		radius: 5,
-		color: "blue",
-	},
-	{
-		title: "Moon",
-		body: new SBody(
-			new Vec2(1.496 * 10 ** 11 + 3.84 * 10 ** 8, 0),
-			new Vec2(0, 29783 + 1022),
-			7.34767309 * 10 ** 22,
-		),
-		radius: 1,
-		color: "gray",
-	},
-	{
-		title: "Mars",
-		body: new SBody(
-			new Vec2(2.279 * 10 ** 11, 0),
-			new Vec2(0, 24077),
-			6.39 * 10 ** 23,
-		),
-		radius: 3,
-		color: "red",
-	},
-	{
-		title: "Phobos",
-		body: new SBody(
-			new Vec2(2.279 * 10 ** 11 + 9.375 * 10 ** 6, 0),
-			new Vec2(0, 24077 + 2138),
-			1.0659 * 10 ** 16,
-		),
-		radius: 1,
-		color: "gray",
-	},
-	{
-		title: "Deimos",
-		body: new SBody(
-			new Vec2(2.279 * 10 ** 11 + 2.326 * 10 ** 7, 0),
-			new Vec2(0, 24077 + 1351),
-			1.4762 * 10 ** 15,
-		),
-		radius: 1,
-		color: "gray",
-	},
-	{
-		title: "Jupiter",
-		body: new SBody(
-			new Vec2(7.785 * 10 ** 11, 0),
-			new Vec2(0, 13070),
-			1.898 * 10 ** 27,
-		),
-		radius: 10,
-		color: "brown",
-	},
-	{
-		title: "Saturn",
-		body: new SBody(
-			new Vec2(1.433 * 10 ** 12, 0),
-			new Vec2(0, 9690),
-			5.683 * 10 ** 26,
-		),
-		radius: 8,
-		color: "yellow",
-	},
-	{
-		title: "Uranus",
-		body: new SBody(
-			new Vec2(2.873 * 10 ** 12, 0),
-			new Vec2(0, 6810),
-			8.681 * 10 ** 25,
-		),
-		radius: 6,
-		color: "lightblue",
-	},
-	{
-		title: "Neptune",
-		body: new SBody(
-			new Vec2(4.495 * 10 ** 12, 0),
-			new Vec2(0, 5430),
-			1.024 * 10 ** 26,
-		),
-		radius: 6,
-		color: "blue",
-	},
-]
+function printPassedTime(ctx: CanvasRenderingContext2D, passedTime: number) {
+	const days = Math.floor(passedTime / 86400)
+	const hours = Math.floor((passedTime % 86400) / 3600)
 
-const G = 6.6743 * 10 ** -11 // N * m^2 / kg^2
+	ctx.fillStyle = "white"
+	ctx.font = "12px monospace"
+	ctx.fillText(`Passed time: ${days} days ${hours} hours`, 20, 20)
+}
 
-export function setupCanvas(element: HTMLCanvasElement) {
-	window.addEventListener("resize", () => {
-		screenWidth = window.innerWidth
-		screenHeight = window.innerHeight
-		scaleAndResizeCanvas(
-			element,
-			(scale) => ctx.scale(scale, scale),
-			screenWidth,
-			screenHeight,
-		)
-	})
+function printScale(ctx: CanvasRenderingContext2D) {
+	ctx.fillStyle = "white"
+	ctx.font = "12px monospace"
+	const [val, pow] = scale.toString().split("e")
+	ctx.fillText(`Scale: ${(+val).toFixed(2)} * ${10}`, 20, 40)
+	ctx.font = "8px monospace"
+	ctx.fillText(`${pow}`, 138, 35)
+}
 
-	const ctx = element.getContext("2d")!
-	scaleAndResizeCanvas(
-		element,
-		(scale) => ctx.scale(scale, scale),
-		screenWidth,
-		screenHeight,
-	)
-
-	const sim = new Simulator(
-		solarSystem.map((obj) => obj.body),
-		G,
-	)
-
-	let passedTime = 0
-
-	function printPassedTime() {
-		const days = Math.floor(passedTime / 86400)
-		const hours = Math.floor((passedTime % 86400) / 3600)
-
-		ctx.fillStyle = "white"
-		ctx.font = "12px monospace"
-		ctx.fillText(`Passed time: ${days} days ${hours} hours`, 20, 20)
-	}
-
-	function printScale() {
-		ctx.fillStyle = "white"
-		ctx.font = "12px monospace"
-		const [val, pow] = scale.toString().split("e")
-		ctx.fillText(`Scale: ${(+val).toFixed(2)} * ${10}`, 20, 40)
-		ctx.font = "8px monospace"
-		ctx.fillText(`${pow}`, 138, 35)
-	}
-
-	function loop() {
-		for (let i = 0; i < stepsPerFrame; i++) sim.step(stepTime)
-
-		passedTime += stepTime * stepsPerFrame
-		screenCenter = solarSystem[followPlanetIdx].body.pos
-
-		clearCanvas(ctx, "#1b2b34")
-		drawObjects(ctx, solarSystem)
-		printPassedTime()
-		printScale()
-
-		requestAnimationFrame(loop)
-	}
-
-	loop()
-
-	element.addEventListener("wheel", (event) => {
+function attachListeners(
+	ctx: CanvasRenderingContext2D,
+	solarSystemObjects: SpaceObject[],
+) {
+	ctx.canvas.addEventListener("wheel", (event) => {
 		event.preventDefault()
 		scale *= 1 + event.deltaY / 1000
 	})
 
 	// pinch zoom
 	let lastDistance = 0
-	element.addEventListener("touchstart", (event) => {
+	ctx.canvas.addEventListener("touchstart", (event) => {
 		if (event.touches.length === 2) {
 			const [a, b] = Array.from(event.touches)
 			lastDistance = new Vec2(a.clientX, a.clientY)
@@ -338,7 +198,7 @@ export function setupCanvas(element: HTMLCanvasElement) {
 				.mag()
 		}
 	})
-	element.addEventListener("touchmove", (event) => {
+	ctx.canvas.addEventListener("touchmove", (event) => {
 		if (event.touches.length === 2) {
 			const [a, b] = Array.from(event.touches)
 			const distance = new Vec2(a.clientX, a.clientY)
@@ -349,14 +209,14 @@ export function setupCanvas(element: HTMLCanvasElement) {
 		}
 	})
 
-	element.addEventListener("click", (event) => {
+	ctx.canvas.addEventListener("click", (event) => {
 		const x = event.offsetX
 		const y = event.offsetY
 		const pos = new Vec2(x, y)
 		const center = new Vec2(screenWidth / 2, screenHeight / 2)
 		const screenPos = pos.sub(center)
 		const worldPos = screenPos.div(scale).add(screenCenter)
-		const closest = solarSystem.reduce(
+		const closest = solarSystemObjects.reduce(
 			(closest, obj, index) => {
 				const dist = obj.body.pos.sub(worldPos).mag()
 				if (dist < closest.dist) {
@@ -371,7 +231,17 @@ export function setupCanvas(element: HTMLCanvasElement) {
 		}
 
 		gui.updateDisplay()
+		selectPlanet(solarSystemObjects)
 	})
 
-	initGui(solarSystem)
+	window.addEventListener("resize", () => {
+		screenWidth = window.innerWidth
+		screenHeight = window.innerHeight
+		scaleAndResizeCanvas(
+			ctx.canvas,
+			(scale) => ctx.scale(scale, scale),
+			screenWidth,
+			screenHeight,
+		)
+	})
 }
