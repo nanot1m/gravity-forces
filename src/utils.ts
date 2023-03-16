@@ -20,6 +20,7 @@ export function spaceObjectJsonToSpaceObject(
 			title: node.title,
 			body: new SBody(new Vec2(distance, 0), new Vec2(0, velocity), node.mass),
 			radius: node.radius,
+			visualRadius: node.visualRadius,
 			color: node.color,
 		})
 

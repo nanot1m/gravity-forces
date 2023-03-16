@@ -5,6 +5,7 @@ export type SpaceObject = {
 	title?: string
 	body: SBody
 	radius: number
+	visualRadius: number
 	color: string
 }
 

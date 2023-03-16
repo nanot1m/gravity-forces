@@ -28,6 +28,7 @@ export function setupCanvas(element: HTMLCanvasElement) {
 	)
 
 	const solarSystemObjects = spaceObjectJsonToSpaceObject(solarSystemJson)
+	// window.solarSystemObjects = solarSystemObjects
 
 	const sim = new Simulator(
 		solarSystemObjects.map((spaceObject) => spaceObject.body),
@@ -112,14 +113,17 @@ function drawCircle(
 	ctx: CanvasRenderingContext2D,
 	circle: Circle,
 	style: Style,
+	minRadius: number,
 ) {
 	ctx.save()
 	ctx.translate(screenWidth / 2, screenHeight / 2)
 
 	const pos = circle.pos.sub(screenCenter)
 
+	const radius = Math.max(circle.radius * scale, minRadius)
+
 	ctx.beginPath()
-	ctx.arc(pos.x * scale, pos.y * scale, circle.radius, 0, 2 * Math.PI)
+	ctx.arc(pos.x * scale, pos.y * scale, radius, 0, 2 * Math.PI)
 
 	if (style.fillStyle) {
 		ctx.fillStyle = style.fillStyle
@@ -146,9 +150,6 @@ function clearCanvas(ctx: CanvasRenderingContext2D, backgroundColor: string) {
 
 function drawObjects(ctx: CanvasRenderingContext2D, objects: SpaceObject[]) {
 	for (const obj of objects) {
-		if (obj.title === "Mars") {
-			// console.log(obj.body.pos.sub(screenCenter))
-		}
 		drawCircle(
 			ctx,
 			{ pos: obj.body.pos, radius: obj.radius },
@@ -157,6 +158,7 @@ function drawObjects(ctx: CanvasRenderingContext2D, objects: SpaceObject[]) {
 				strokeStyle: "white",
 				lineWidth: 1,
 			},
+			obj.visualRadius,
 		)
 	}
 }

@@ -4,6 +4,7 @@ export type SpaceObjectJsonNode = {
     velocity: number;
     mass: number;
     radius: number;
+    visualRadius: number;
     color: string;
     orbitals?: SpaceObjectJsonNode[];
 };

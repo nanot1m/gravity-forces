@@ -5,7 +5,8 @@ export const solarSystemJson: SpaceObjectJsonNode = {
 	distance: 0,
 	velocity: 0,
 	mass: 1.989 * 10 ** 30,
-	radius: 20,
+	radius: 696.342 * 10 ** 6,
+    visualRadius: 20,
 	color: "yellow",
 	orbitals: [
 		{
@@ -13,7 +14,8 @@ export const solarSystemJson: SpaceObjectJsonNode = {
 			distance: 5.79 * 10 ** 10,
 			velocity: 47870,
 			mass: 3.285 * 10 ** 23,
-			radius: 2,
+			radius: 2.439 * 10 ** 6,
+            visualRadius: 2,
 			color: "gray",
 		},
 		{
@@ -21,7 +23,8 @@ export const solarSystemJson: SpaceObjectJsonNode = {
 			distance: 1.082 * 10 ** 11,
 			velocity: 35020,
 			mass: 4.867 * 10 ** 24,
-			radius: 3,
+			radius: 6.051 * 10 ** 6,
+            visualRadius: 4,
 			color: "orange",
 		},
 		{
@@ -29,7 +32,8 @@ export const solarSystemJson: SpaceObjectJsonNode = {
 			distance: 1.496 * 10 ** 11,
 			velocity: 29783,
 			mass: 5.972 * 10 ** 24,
-			radius: 5,
+			radius: 6.371 * 10 ** 6,
+            visualRadius: 5,
 			color: "blue",
 			orbitals: [
 				{
@@ -37,7 +41,8 @@ export const solarSystemJson: SpaceObjectJsonNode = {
 					distance: 3.84 * 10 ** 8,
 					velocity: 1022,
 					mass: 7.34767309 * 10 ** 22,
-					radius: 1,
+					radius: 1.737 * 10 ** 6,
+                    visualRadius: 1,
 					color: "gray",
 				},
 			],
@@ -47,7 +52,8 @@ export const solarSystemJson: SpaceObjectJsonNode = {
 			distance: 2.279 * 10 ** 11,
 			velocity: 24077,
 			mass: 6.39 * 10 ** 23,
-			radius: 3,
+            radius: 3.389 * 10 ** 6,
+			visualRadius: 3,
 			color: "red",
 			orbitals: [
 				{
@@ -55,7 +61,8 @@ export const solarSystemJson: SpaceObjectJsonNode = {
 					distance: 9.375 * 10 ** 6,
 					velocity: 2138,
 					mass: 1.0659 * 10 ** 16,
-					radius: 1,
+					radius: 11267,
+                    visualRadius: 1,
 					color: "gray",
 				},
 				{
@@ -63,7 +70,8 @@ export const solarSystemJson: SpaceObjectJsonNode = {
 					distance: 2.326 * 10 ** 7,
 					velocity: 1351,
 					mass: 1.4762 * 10 ** 15,
-					radius: 1,
+					radius: 6200,
+                    visualRadius: 1,
 					color: "gray",
 				},
 			],
@@ -73,7 +81,8 @@ export const solarSystemJson: SpaceObjectJsonNode = {
 			distance: 7.785 * 10 ** 11,
 			velocity: 13070,
 			mass: 1.898 * 10 ** 27,
-			radius: 10,
+			radius: 69.911 * 10 ** 6,
+            visualRadius: 10,
 			color: "brown",
 		},
 		{
@@ -81,7 +90,8 @@ export const solarSystemJson: SpaceObjectJsonNode = {
 			distance: 1.433 * 10 ** 12,
 			velocity: 9690,
 			mass: 5.683 * 10 ** 26,
-			radius: 8,
+			radius: 58.232 * 10 ** 6,
+            visualRadius: 8,
 			color: "yellow",
 		},
 		{
@@ -89,7 +99,8 @@ export const solarSystemJson: SpaceObjectJsonNode = {
 			distance: 2.873 * 10 ** 12,
 			velocity: 6810,
 			mass: 8.681 * 10 ** 25,
-			radius: 6,
+			radius: 25.362 * 10 ** 6,
+            visualRadius: 6,
 			color: "lightblue",
 		},
 		{
@@ -97,7 +108,8 @@ export const solarSystemJson: SpaceObjectJsonNode = {
 			distance: 4.495 * 10 ** 12,
 			velocity: 5430,
 			mass: 1.024 * 10 ** 26,
-			radius: 6,
+			radius: 24.622 * 10 ** 6,
+            visualRadius: 6,
 			color: "blue",
 		},
 	],
