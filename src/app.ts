@@ -298,6 +298,15 @@ export function setupCanvas(element: HTMLCanvasElement) {
 		ctx.fillText(`Passed time: ${days} days ${hours} hours`, 20, 20)
 	}
 
+	function printScale() {
+		ctx.fillStyle = "white"
+		ctx.font = "12px monospace"
+		const [val, pow] = scale.toString().split("e")
+		ctx.fillText(`Scale: ${(+val).toFixed(2)} * ${10}`, 20, 40)
+		ctx.font = "8px monospace"
+		ctx.fillText(`${pow}`, 138, 35)
+	}
+
 	function loop() {
 		for (let i = 0; i < stepsPerFrame; i++) sim.step(stepTime)
 
@@ -307,6 +316,8 @@ export function setupCanvas(element: HTMLCanvasElement) {
 		clearCanvas(ctx, "#1b2b34")
 		drawObjects(ctx, solarSystem)
 		printPassedTime()
+		printScale()
+
 		requestAnimationFrame(loop)
 	}
 
