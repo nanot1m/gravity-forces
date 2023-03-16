@@ -4,7 +4,7 @@ export const solarSystemJson: SpaceObjectJsonNode = {
 	title: "Sun",
 	distance: 0,
 	velocity: 0,
-	mass: 1.989 * 10 ** 30,
+	mass: 1.99 * 10 ** 30,
 	radius: 696.342 * 10 ** 6,
     visualRadius: 20,
 	color: "yellow",
