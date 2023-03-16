@@ -1,3 +1,5 @@
+import { GUI } from "dat.gui"
+
 import { SBody } from "./classes/SBody"
 import { Simulator } from "./classes/Simulator"
 import { Vec2 } from "./classes/Vec2"
@@ -20,6 +22,53 @@ let screenWidth = window.innerWidth
 let screenHeight = window.innerHeight
 let scale = 1e-9
 let screenCenter = new Vec2(0, 0)
+let stepTime = 2 // seconds
+let stepsPerFrame = 1800 // 30 minutes
+let followPlanetIdx = 0
+let gui: GUI
+
+function initGui(objects: SpaceObject[]) {
+	gui = new GUI({
+		autoPlace: true,
+		hideable: true,
+	})
+
+	const sim = {
+		get stepTime() {
+			return stepTime
+		},
+		set stepTime(value: number) {
+			stepTime = value
+		},
+
+		get stepsPerFrame() {
+			return stepsPerFrame
+		},
+		set stepsPerFrame(value: number) {
+			stepsPerFrame = value
+		},
+
+		get followObject() {
+			return objects[followPlanetIdx].title ?? "Untitled"
+		},
+		set followObject(value: string) {
+			followPlanetIdx = Math.max(
+				objects.findIndex((obj) => obj.title === value),
+				0,
+			)
+		},
+	}
+
+	const simFolder = gui.addFolder("Simulation")
+	simFolder.add(sim, "stepTime", 1, 10, 1)
+	simFolder.add(sim, "stepsPerFrame", 60, 7200, 60)
+	simFolder.add(
+		sim,
+		"followObject",
+		objects.map((x) => x.title),
+	)
+	simFolder.open()
+}
 
 type Circle = {
 	pos: Vec2
@@ -93,14 +142,14 @@ function drawObjects(ctx: CanvasRenderingContext2D, objects: SpaceObject[]) {
 }
 
 const solarSystem: SpaceObject[] = [
-	// Sun
 	{
+		title: "Sun",
 		body: new SBody(new Vec2(0, 0), new Vec2(0, 0), 1.989 * 10 ** 30),
 		radius: 20,
 		color: "yellow",
 	},
-	// Mercury
 	{
+		title: "Mercury",
 		body: new SBody(
 			new Vec2(5.79 * 10 ** 10, 0),
 			new Vec2(0, 47870),
@@ -109,8 +158,8 @@ const solarSystem: SpaceObject[] = [
 		radius: 2,
 		color: "gray",
 	},
-	// Venus
 	{
+		title: "Venus",
 		body: new SBody(
 			new Vec2(1.082 * 10 ** 11, 0),
 			new Vec2(0, 35020),
@@ -119,8 +168,8 @@ const solarSystem: SpaceObject[] = [
 		radius: 3,
 		color: "orange",
 	},
-	// Earth
 	{
+		title: "Earth",
 		body: new SBody(
 			new Vec2(1.496 * 10 ** 11, 0), // m
 			new Vec2(0, 29783), // m/s
@@ -129,8 +178,8 @@ const solarSystem: SpaceObject[] = [
 		radius: 5,
 		color: "blue",
 	},
-	// Moon
 	{
+		title: "Moon",
 		body: new SBody(
 			new Vec2(1.496 * 10 ** 11 + 3.84 * 10 ** 8, 0),
 			new Vec2(0, 29783 + 1022),
@@ -139,8 +188,6 @@ const solarSystem: SpaceObject[] = [
 		radius: 1,
 		color: "gray",
 	},
-
-	// Mars
 	{
 		title: "Mars",
 		body: new SBody(
@@ -151,9 +198,8 @@ const solarSystem: SpaceObject[] = [
 		radius: 3,
 		color: "red",
 	},
-	// Mars moons
-	// Phobos
 	{
+		title: "Phobos",
 		body: new SBody(
 			new Vec2(2.279 * 10 ** 11 + 9.375 * 10 ** 6, 0),
 			new Vec2(0, 24077 + 2138),
@@ -162,8 +208,8 @@ const solarSystem: SpaceObject[] = [
 		radius: 1,
 		color: "gray",
 	},
-	// Deimos
 	{
+		title: "Deimos",
 		body: new SBody(
 			new Vec2(2.279 * 10 ** 11 + 2.326 * 10 ** 7, 0),
 			new Vec2(0, 24077 + 1351),
@@ -172,9 +218,8 @@ const solarSystem: SpaceObject[] = [
 		radius: 1,
 		color: "gray",
 	},
-
-	// Jupiter
 	{
+		title: "Jupiter",
 		body: new SBody(
 			new Vec2(7.785 * 10 ** 11, 0),
 			new Vec2(0, 13070),
@@ -183,8 +228,8 @@ const solarSystem: SpaceObject[] = [
 		radius: 10,
 		color: "brown",
 	},
-	// Saturn
 	{
+		title: "Saturn",
 		body: new SBody(
 			new Vec2(1.433 * 10 ** 12, 0),
 			new Vec2(0, 9690),
@@ -193,8 +238,8 @@ const solarSystem: SpaceObject[] = [
 		radius: 8,
 		color: "yellow",
 	},
-	// Uranus
 	{
+		title: "Uranus",
 		body: new SBody(
 			new Vec2(2.873 * 10 ** 12, 0),
 			new Vec2(0, 6810),
@@ -203,8 +248,8 @@ const solarSystem: SpaceObject[] = [
 		radius: 6,
 		color: "lightblue",
 	},
-	// Neptune
 	{
+		title: "Neptune",
 		body: new SBody(
 			new Vec2(4.495 * 10 ** 12, 0),
 			new Vec2(0, 5430),
@@ -242,11 +287,6 @@ export function setupCanvas(element: HTMLCanvasElement) {
 		G,
 	)
 
-	let centeredObject = solarSystem[0].body
-
-	let stepTime = 1 // seconds
-	let stepsPerFrame = 1800 // 30 minutes
-
 	let passedTime = 0
 
 	function printPassedTime() {
@@ -260,9 +300,9 @@ export function setupCanvas(element: HTMLCanvasElement) {
 
 	function loop() {
 		for (let i = 0; i < stepsPerFrame; i++) sim.step(stepTime)
-		
+
 		passedTime += stepTime * stepsPerFrame
-		screenCenter = centeredObject.pos
+		screenCenter = solarSystem[followPlanetIdx].body.pos
 
 		clearCanvas(ctx, "#1b2b34")
 		drawObjects(ctx, solarSystem)
@@ -306,17 +346,21 @@ export function setupCanvas(element: HTMLCanvasElement) {
 		const screenPos = pos.sub(center)
 		const worldPos = screenPos.div(scale).add(screenCenter)
 		const closest = solarSystem.reduce(
-			(closest, obj) => {
+			(closest, obj, index) => {
 				const dist = obj.body.pos.sub(worldPos).mag()
 				if (dist < closest.dist) {
-					return { dist, obj }
+					return { dist, index }
 				}
 				return closest
 			},
-			{ dist: Infinity, obj: null as SpaceObject | null },
+			{ dist: Infinity, index: -1 },
 		)
-		if (closest.obj) {
-			centeredObject = closest.obj.body
+		if (closest.index > -1) {
+			followPlanetIdx = closest.index
 		}
+
+		gui.updateDisplay()
 	})
+
+	initGui(solarSystem)
 }
