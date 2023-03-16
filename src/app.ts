@@ -41,6 +41,7 @@ function drawCircle(
 	ctx.translate(screenWidth / 2, screenHeight / 2)
 
 	const pos = circle.pos.sub(screenCenter)
+
 	ctx.beginPath()
 	ctx.arc(pos.x * scale, pos.y * scale, circle.radius, 0, 2 * Math.PI)
 
@@ -61,6 +62,7 @@ function drawCircle(
 }
 
 type SpaceObject = {
+	title?: string
 	body: SBody
 	radius: number
 	color: string
@@ -75,6 +77,9 @@ function clearCanvas(ctx: CanvasRenderingContext2D, backgroundColor: string) {
 
 function drawObjects(ctx: CanvasRenderingContext2D, objects: SpaceObject[]) {
 	for (const obj of objects) {
+		if (obj.title === "Mars") {
+			// console.log(obj.body.pos.sub(screenCenter))
+		}
 		drawCircle(
 			ctx,
 			{ pos: obj.body.pos, radius: obj.radius },
@@ -117,9 +122,9 @@ const solarSystem: SpaceObject[] = [
 	// Earth
 	{
 		body: new SBody(
-			new Vec2(1.496 * 10 ** 11, 0),
-			new Vec2(0, 29783),
-			5.972 * 10 ** 24,
+			new Vec2(1.496 * 10 ** 11, 0), // m
+			new Vec2(0, 29783), // m/s
+			5.972 * 10 ** 24, // kg
 		),
 		radius: 5,
 		color: "blue",
@@ -137,9 +142,10 @@ const solarSystem: SpaceObject[] = [
 
 	// Mars
 	{
+		title: "Mars",
 		body: new SBody(
 			new Vec2(2.279 * 10 ** 11, 0),
-			new Vec2(0, 24130),
+			new Vec2(0, 24077),
 			6.39 * 10 ** 23,
 		),
 		radius: 3,
@@ -149,8 +155,8 @@ const solarSystem: SpaceObject[] = [
 	// Phobos
 	{
 		body: new SBody(
-			new Vec2(2.279 * 10 ** 11 + 9.378 * 10 ** 7, 0),
-			new Vec2(0, 24130 + 700),
+			new Vec2(2.279 * 10 ** 11 + 9.375 * 10 ** 6, 0),
+			new Vec2(0, 24077 + 2138),
 			1.0659 * 10 ** 16,
 		),
 		radius: 1,
@@ -159,8 +165,8 @@ const solarSystem: SpaceObject[] = [
 	// Deimos
 	{
 		body: new SBody(
-			new Vec2(2.279 * 10 ** 11 + 2.326 * 10 ** 8, 0),
-			new Vec2(0, 24130 + 400),
+			new Vec2(2.279 * 10 ** 11 + 2.326 * 10 ** 7, 0),
+			new Vec2(0, 24077 + 1351),
 			1.4762 * 10 ** 15,
 		),
 		radius: 1,
@@ -209,6 +215,8 @@ const solarSystem: SpaceObject[] = [
 	},
 ]
 
+const G = 6.6743 * 10 ** -11 // N * m^2 / kg^2
+
 export function setupCanvas(element: HTMLCanvasElement) {
 	window.addEventListener("resize", () => {
 		screenWidth = window.innerWidth
@@ -231,20 +239,34 @@ export function setupCanvas(element: HTMLCanvasElement) {
 
 	const sim = new Simulator(
 		solarSystem.map((obj) => obj.body),
-		6.6743 * 10 ** -11,
+		G,
 	)
 
 	let centeredObject = solarSystem[0].body
 
-	let stepTime = 10
-	let stepsPerFrame = 360
-	function loop() {
-		screenCenter = centeredObject.pos
+	let stepTime = 1 // seconds
+	let stepsPerFrame = 1800 // 30 minutes
 
+	let passedTime = 0
+
+	function printPassedTime() {
+		const days = Math.floor(passedTime / 86400)
+		const hours = Math.floor((passedTime % 86400) / 3600)
+
+		ctx.fillStyle = "white"
+		ctx.font = "12px monospace"
+		ctx.fillText(`Passed time: ${days} days ${hours} hours`, 20, 20)
+	}
+
+	function loop() {
 		for (let i = 0; i < stepsPerFrame; i++) sim.step(stepTime)
+		
+		passedTime += stepTime * stepsPerFrame
+		screenCenter = centeredObject.pos
 
 		clearCanvas(ctx, "#1b2b34")
 		drawObjects(ctx, solarSystem)
+		printPassedTime()
 		requestAnimationFrame(loop)
 	}
 
