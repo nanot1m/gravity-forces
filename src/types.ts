@@ -2,7 +2,7 @@ import { SBody } from "./classes/SBody"
 import { Vec2 } from "./classes/Vec2"
 
 export type SpaceObject = {
-	title?: string
+	title: string
 	body: SBody
 	radius: number
 	visualRadius: number

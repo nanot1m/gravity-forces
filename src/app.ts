@@ -17,6 +17,7 @@ let stepsPerFrame = 1800 // 30 minutes
 let followPlanetIdx = 0
 let gui: dat.GUI
 let selectedPlanet: dat.GUI
+let mouseOverPlanet: SpaceObject | null = null
 
 export function setupCanvas(element: HTMLCanvasElement) {
 	const ctx = element.getContext("2d")!
@@ -106,6 +107,7 @@ function selectPlanet(objects: SpaceObject[]) {
 	selectedPlanet = gui.addFolder("Selected Planet")
 	selectedPlanet.add(objects[followPlanetIdx], "title")
 	selectedPlanet.add(objects[followPlanetIdx].body, "mass")
+	selectedPlanet.add(objects[followPlanetIdx], "radius")
 	selectedPlanet.open()
 }
 
@@ -150,6 +152,32 @@ function clearCanvas(ctx: CanvasRenderingContext2D, backgroundColor: string) {
 
 function drawObjects(ctx: CanvasRenderingContext2D, objects: SpaceObject[]) {
 	for (const obj of objects) {
+		// draw title
+		if (obj === mouseOverPlanet) {
+			ctx.save()
+
+			const radius = Math.max(obj.radius * scale, obj.visualRadius)
+
+			ctx.font = "12px monospace"
+			ctx.textAlign = "center"
+			const measure = ctx.measureText(obj.title)
+
+			const dx = screenWidth / 2 + (obj.body.pos.x - screenCenter.x) * scale
+			const dy = screenHeight / 2 + (obj.body.pos.y - screenCenter.y) * scale
+
+			ctx.fillStyle = "black"
+			ctx.fillRect(
+				dx - measure.width / 2 - 4,
+				dy - 16 - radius - 14,
+				measure.width + 8,
+				18,
+			)
+
+			ctx.fillStyle = "white"
+			ctx.fillText(obj.title, dx, dy - 16 - radius)
+			ctx.restore()
+		}
+
 		drawCircle(
 			ctx,
 			{ pos: obj.body.pos, radius: obj.radius },
@@ -212,28 +240,25 @@ function attachListeners(
 	})
 
 	ctx.canvas.addEventListener("click", (event) => {
-		const x = event.offsetX
-		const y = event.offsetY
-		const pos = new Vec2(x, y)
-		const center = new Vec2(screenWidth / 2, screenHeight / 2)
-		const screenPos = pos.sub(center)
-		const worldPos = screenPos.div(scale).add(screenCenter)
-		const closest = solarSystemObjects.reduce(
-			(closest, obj, index) => {
-				const dist = obj.body.pos.sub(worldPos).mag()
-				if (dist < closest.dist) {
-					return { dist, index }
-				}
-				return closest
-			},
-			{ dist: Infinity, index: -1 },
-		)
-		if (closest.index > -1) {
-			followPlanetIdx = closest.index
+		if (!mouseOverPlanet) {
+			const pos = new Vec2(event.offsetX, event.offsetY)
+			mouseOverPlanet = findFirstObjectAtPos(pos, solarSystemObjects)
 		}
-
+		if (mouseOverPlanet) {
+			followPlanetIdx = solarSystemObjects.indexOf(mouseOverPlanet)
+		}
 		gui.updateDisplay()
 		selectPlanet(solarSystemObjects)
+	})
+
+	ctx.canvas.addEventListener("mousemove", (event) => {
+		const pos = new Vec2(event.offsetX, event.offsetY)
+		mouseOverPlanet = findFirstObjectAtPos(pos, solarSystemObjects)
+		if (mouseOverPlanet) {
+			ctx.canvas.style.cursor = "pointer"
+		} else {
+			ctx.canvas.style.cursor = "default"
+		}
 	})
 
 	window.addEventListener("resize", () => {
@@ -246,4 +271,15 @@ function attachListeners(
 			screenHeight,
 		)
 	})
+}
+
+function findFirstObjectAtPos(pos: Vec2, solarSystemObjects: SpaceObject[]) {
+	const center = new Vec2(screenWidth / 2, screenHeight / 2)
+	const screenPos = pos.sub(center)
+	const worldPos = screenPos.div(scale).add(screenCenter)
+	const closest = solarSystemObjects.find((obj) => {
+		const radius = Math.max(obj.radius * scale, obj.visualRadius)
+		return obj.body.pos.sub(worldPos).mag() * scale < radius + 5
+	})
+	return closest ?? null
 }
