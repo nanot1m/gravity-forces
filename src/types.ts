@@ -1,12 +1,19 @@
 import { SBody } from "./classes/SBody"
 import { Vec2 } from "./classes/Vec2"
 
+export type Color = {
+	r: number
+	g: number
+	b: number
+	a: number
+}
+
 export type SpaceObject = {
 	title: string
 	body: SBody
 	radius: number
 	visualRadius: number
-	color: string
+	color: Color
 }
 
 export type Circle = {

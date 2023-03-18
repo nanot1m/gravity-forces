@@ -4,7 +4,11 @@ import { Simulator } from "./classes/Simulator"
 import { Vec2 } from "./classes/Vec2"
 import { solarSystemJson } from "./data/solar-system"
 import { Circle, SpaceObject, Style } from "./types"
-import { scaleAndResizeCanvas, spaceObjectJsonToSpaceObject } from "./utils"
+import {
+	colorToString,
+	scaleAndResizeCanvas,
+	spaceObjectJsonToSpaceObject,
+} from "./utils"
 
 const G = 6.6743 * 10 ** -11 // N * m^2 / kg^2
 
@@ -45,6 +49,7 @@ export function setupCanvas(element: HTMLCanvasElement) {
 		screenCenter = solarSystemObjects[followPlanetIdx].body.pos
 
 		clearCanvas(ctx, "#1b2b34")
+		drawTails(ctx, solarSystemObjects)
 		drawObjects(ctx, solarSystemObjects)
 		printPassedTime(ctx, passedTime)
 		printScale(ctx)
@@ -111,6 +116,38 @@ function selectPlanet(objects: SpaceObject[]) {
 	selectedPlanet.open()
 }
 
+function drawTails(ctx: CanvasRenderingContext2D, objects: SpaceObject[]) {
+	for (const object of objects) {
+		const points = object.body.tail
+			.concat(object.body.pos)
+			.map((pos) => pos.sub(screenCenter).mul(scale))
+
+		const tail = new Path2D()
+		tail.moveTo(points[0].x, points[0].y)
+		for (let i = 1; i < points.length; i++) {
+			tail.lineTo(points[i].x, points[i].y)
+		}
+
+		const gradient = ctx.createLinearGradient(
+			points[0].x,
+			points[0].y,
+			points[points.length - 1].x,
+			points[points.length - 1].y,
+		)
+		gradient.addColorStop(0, colorToString(object.color, 0))
+		gradient.addColorStop(1, colorToString(object.color))
+
+		ctx.save()
+
+		ctx.translate(screenWidth / 2, screenHeight / 2)
+		ctx.lineWidth = 3
+		ctx.strokeStyle = gradient
+		ctx.stroke(tail)
+
+		ctx.restore()
+	}
+}
+
 function drawCircle(
 	ctx: CanvasRenderingContext2D,
 	circle: Circle,
@@ -120,12 +157,12 @@ function drawCircle(
 	ctx.save()
 	ctx.translate(screenWidth / 2, screenHeight / 2)
 
-	const pos = circle.pos.sub(screenCenter)
+	const pos = circle.pos.sub(screenCenter).mul(scale)
 
 	const radius = Math.max(circle.radius * scale, minRadius)
 
 	ctx.beginPath()
-	ctx.arc(pos.x * scale, pos.y * scale, radius, 0, 2 * Math.PI)
+	ctx.arc(pos.x, pos.y, radius, 0, 2 * Math.PI)
 
 	if (style.fillStyle) {
 		ctx.fillStyle = style.fillStyle
@@ -161,20 +198,19 @@ function drawObjects(ctx: CanvasRenderingContext2D, objects: SpaceObject[]) {
 			ctx.font = "12px monospace"
 			ctx.textAlign = "center"
 			const measure = ctx.measureText(obj.title)
+			const pos = obj.body.pos.sub(screenCenter).mul(scale)
 
-			const dx = screenWidth / 2 + (obj.body.pos.x - screenCenter.x) * scale
-			const dy = screenHeight / 2 + (obj.body.pos.y - screenCenter.y) * scale
-
+			ctx.translate(screenWidth / 2, screenHeight / 2)
 			ctx.fillStyle = "black"
 			ctx.fillRect(
-				dx - measure.width / 2 - 4,
-				dy - 16 - radius - 14,
+				pos.x - measure.width / 2 - 4,
+				pos.y - 16 - radius - 14,
 				measure.width + 8,
 				18,
 			)
 
 			ctx.fillStyle = "white"
-			ctx.fillText(obj.title, dx, dy - 16 - radius)
+			ctx.fillText(obj.title, pos.x, pos.y - 16 - radius)
 			ctx.restore()
 		}
 
@@ -182,7 +218,7 @@ function drawObjects(ctx: CanvasRenderingContext2D, objects: SpaceObject[]) {
 			ctx,
 			{ pos: obj.body.pos, radius: obj.radius },
 			{
-				fillStyle: obj.color,
+				fillStyle: colorToString(obj.color),
 				strokeStyle: "white",
 				lineWidth: 1,
 			},
